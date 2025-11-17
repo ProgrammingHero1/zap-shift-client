@@ -2,9 +2,18 @@ import React from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { useLoaderData } from 'react-router';
 import Swal from 'sweetalert2';
+import useAxiosSecure from '../../hooks/useAxiosSecure';
+import useAuth from '../../hooks/useAuth';
 
 const SendParcel = () => {
-    const { register, handleSubmit, control, formState: { errors } } = useForm();
+    const {
+        register,
+        handleSubmit,
+        control,
+        // formState: { errors } 
+    } = useForm();
+    const { user } = useAuth();
+    const axiosSecure = useAxiosSecure();
 
     const serviceCenters = useLoaderData();
     const regionsDuplicate = serviceCenters.map(c => c.region);
@@ -46,7 +55,7 @@ const SendParcel = () => {
         }
 
         console.log('cost', cost);
-        
+
         Swal.fire({
             title: "Agree with the Cost?",
             text: `You will be charged ${cost} taka!`,
@@ -58,7 +67,11 @@ const SendParcel = () => {
         }).then((result) => {
             if (result.isConfirmed) {
 
-                // 
+                // save the parcel info to the database
+                axiosSecure.post('/parcels', data)
+                    .then(res => {
+                        console.log('after saving parcel', res.data);
+                    })
 
                 // Swal.fire({
                 //     title: "Deleted!",
@@ -107,11 +120,15 @@ const SendParcel = () => {
                         <h4 className="text-2xl font-semibold">Sender Details</h4>
                         {/* sender name */}
                         <label className="label">Sender Name</label>
-                        <input type="text" {...register('senderName')} className="input w-full" placeholder="Sender Name" />
+                        <input type="text" {...register('senderName')} 
+                        defaultValue={user?.displayName}
+                        className="input w-full" placeholder="Sender Name" />
 
                         {/* sender email */}
                         <label className="label">Sender Email</label>
-                        <input type="text" {...register('senderEmail')} className="input w-full" placeholder="Sender Email" />
+                        <input type="text" {...register('senderEmail')}
+                            defaultValue={user?.email}
+                            className="input w-full" placeholder="Sender Email" />
 
                         {/* sender region */}
                         <fieldset className="fieldset">
